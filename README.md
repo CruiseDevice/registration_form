@@ -262,6 +262,17 @@ alembic upgrade head
 ```bash
 # Backend testing (add pytest)
 pip install pytest
+
+# Run all schema tests
+pytest tests/test_schemas.py
+
+# Run with verbose output
+pytest tests/test_schemas.py -v
+
+# Run specific test class
+pytest tests/test_schemas.py::TestUserCreateSchema
+
+# Run all tests in the tests directory
 pytest
 
 # Frontend testing  

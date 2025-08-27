@@ -432,6 +432,15 @@ Password: SecurePass123!@#
 
 I confirmed that the users are created successfully, but why does this error occur? Let me know if you want to perform any operation on the database before proceeding to make any changes.
 
+
+#### Issue #4: Spacing issue in RegistrationForm.tsx
+
+**Problem**: Lot of space between the Registration form and the login link.
+
+**My Query:**
+There is a lot of space between "Already have an account? Sign in" and the registrationform. Can you help me fix this space issue please 
+
+
 ## 4. Environment Configuration
 
 ### Platform: Cursor AI Assistant
@@ -439,3 +448,39 @@ I confirmed that the users are created successfully, but why does this error occ
 
 **My Query**
 I have currently created a .env file in the backend's root directory. I want to use the variables defined in the .env file in @auth.py @auth.py and @database.py  
+
+## 5. Test Configuration and Implementation
+
+### Platform: Claude Code
+### Purpose: Implementing testcases for the backend
+
+**My query**
+I want to implement the test cases for the backend. Can you help me indentify  what tests are required? Also i want to have the tests in the separate directory
+
+Let's start with the implementation of schema validation tests. once that is  done, also show me how to run the tests for schema validation tests
+
+Now let's implement the Authentication tests
+
+Now let's implement the API endpoint tests
+
+Now let's implement Model tests
+
+Now let's implement Integration tests, the final in the Test implementation plan for backend
+
+#### Issue #1: Schema validation test failing
+
+**Problem**: Schema validation test failing because of the issue with the Python path.
+
+**My Query**:
+i tried running pytest tests/test_schemas.py -v from backend directory, i got this error (registration) ➜  backend git:(dev) ✗ python tests/test_schemas.py -v
+Traceback (most recent call last):
+  File 
+"/Users/akash/work/github/registration_form/backend/tests/test_schemas.py", line 4, in <module>
+  from app.schemas import UserCreate, UserLogin, UserResponse, UserUpdate, Token
+ModuleNotFoundError: No module named 'app'
+
+#### Issue #2: Fix python path issue when running backend tests
+
+**Problem**: I have to include PYTHONPATH=. everytime when running tests
+
+**My query**: why do i have to execute this big command PYTHONPATH=. pytest tests/test_schemas.py --cov=app.schemas -v why can't i just do pytest tests/test_schemas.py? How to fix this?
