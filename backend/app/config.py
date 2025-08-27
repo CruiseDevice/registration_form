@@ -9,5 +9,6 @@ class Settings:
     DATABASE_URL: str = os.getenv("DATABASE_URL", "sqlite:///./users.db")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
     ALGORITHM: str = "HS256"
+    ADMIN_INIT_ENDPOINT: str = os.getenv("ADMIN_INIT_ENDPOINT", "/admin-init-db-x7k9m2p4")
 
 settings = Settings()
