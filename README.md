@@ -210,27 +210,6 @@ ACCESS_TOKEN_EXPIRE_MINUTES=30
 ### CORS Configuration
 The backend is configured to accept requests from `http://localhost:3000` by default. Update `main.py` for production domains.
 
-## 🎨 Design Decisions
-
-### UI/UX Principles
-- **Minimalist Design**: Clean, professional appearance without gradients or heavy shadows
-- **Border-based Elevation**: Subtle 1px borders instead of drop shadows  
-- **System Fonts**: Reliable typography across all platforms
-- **Generous Whitespace**: Improved readability and visual hierarchy
-- **Single Primary Color**: Consistent blue theme throughout
-
-### Validation Strategy
-- **Client + Server Side**: Double validation for security and UX
-- **Real-time Feedback**: Immediate validation as users type
-- **Progressive Enhancement**: Form works even if JavaScript fails
-- **Accessibility**: Screen reader compatible error messages
-
-### Security Considerations
-- **Password Hashing**: Secure bcrypt hashing
-- **JWT Tokens**: Stateless authentication with expiration
-- **Input Sanitization**: Protection against common attacks
-- **CORS Protection**: Restricted cross-origin requests
-
 ## 🚀 Production Deployment
 
 ### Backend Deployment
@@ -267,28 +246,6 @@ alembic revision --autogenerate -m "Initial migration"
 alembic upgrade head
 ```
 
-## 🔍 Troubleshooting
-
-### Common Issues
-
-**Backend not starting:**
-- Ensure Python virtual environment is activated
-- Check that all dependencies are installed
-- Verify port 8000 is not in use
-
-**Frontend not connecting to backend:**  
-- Confirm backend is running on port 8000
-- Check CORS configuration in `main.py`
-- Verify API_BASE_URL in `frontend/src/utils/api.ts`
-
-**Database issues:**
-- Delete `users.db` and run `python seed_data.py` again
-- Check file permissions in the backend directory
-
-**Password validation not working:**
-- Ensure password meets all criteria (check console for detailed errors)
-- Verify email domain is exactly `@getcovered.io`
-
 ## 🧑‍💻 Development
 
 ### Code Style
@@ -310,19 +267,17 @@ pytest
 # Frontend testing  
 npm test
 ```
+## 📝 AI-Assisted Development
 
-## 📄 License
+This project was built using AI assistance. The complete development process, including all prompts and interactions across multiple AI platforms (Claude Web, Claude Code, Cursor AI), is documented in [`prompts.md`](./prompts.md).
 
-This project is for educational purposes as part of a coding challenge.
+**Key AI Tools Used:**
+- Claude (Web Interface) - Project planning
+- Claude Code - Full implementation
+- Cursor AI Assistant - Debugging and iteration
 
-## 🙋‍♂️ Support
-
-For questions or issues:
-1. Check the troubleshooting section above
-2. Review the FastAPI docs at `/docs` endpoint  
-3. Check browser console for frontend errors
-4. Verify both backend and frontend servers are running
-
----
-
-**Built with ❤️ using FastAPI, React, TypeScript, and Tailwind CSS**
+**Development Approach:**
+- Documentation-first prompt engineering
+- Multi-tool AI assistance strategy
+- Iterative problem-solving with AI feedback
+- Real-time debugging and issue resolution
