@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import LoginForm from '../LoginForm';
@@ -10,6 +11,13 @@ jest.mock('../../utils/api', () => ({
   authAPI: {
     login: jest.fn(),
   },
+}));
+
+// Mock React Router navigation
+const mockNavigate = jest.fn();
+jest.mock('react-router-dom', () => ({
+  ...jest.requireActual('react-router-dom'),
+  useNavigate: () => mockNavigate,
 }));
 
 // Mock localStorage
@@ -23,18 +31,25 @@ Object.defineProperty(window, 'localStorage', {
   value: localStorageMock
 });
 
+const renderWithRouter = (component: React.ReactElement) => {
+  return render(
+    <MemoryRouter>
+      {component}
+    </MemoryRouter>
+  );
+};
+
 describe('LoginForm', () => {
-  const mockOnSuccess = jest.fn();
-  const mockOnSwitchToRegister = jest.fn();
   const mockedAuthAPI = authAPI as jest.Mocked<typeof authAPI>;
 
   beforeEach(() => {
     jest.clearAllMocks();
     localStorageMock.setItem.mockClear();
+    mockNavigate.mockClear();
   });
 
   it('renders all form fields', () => {
-    render(<LoginForm onSuccess={mockOnSuccess} onSwitchToRegister={mockOnSwitchToRegister} />);
+    renderWithRouter(<LoginForm />);
     
     expect(screen.getByLabelText('Work Email')).toBeInTheDocument();
     expect(screen.getByLabelText('Password')).toBeInTheDocument();
@@ -43,7 +58,7 @@ describe('LoginForm', () => {
   });
 
   it('renders form title and description', () => {
-    render(<LoginForm onSuccess={mockOnSuccess} onSwitchToRegister={mockOnSwitchToRegister} />);
+    renderWithRouter(<LoginForm />);
     
     expect(screen.getByText('Sign in to your account')).toBeInTheDocument();
     expect(screen.getByText('Welcome back to GetCovered')).toBeInTheDocument();
@@ -51,7 +66,7 @@ describe('LoginForm', () => {
 
   it('validates email format and domain', async () => {
     const user = userEvent.setup();
-    render(<LoginForm onSuccess={mockOnSuccess} onSwitchToRegister={mockOnSwitchToRegister} />);
+    renderWithRouter(<LoginForm />);
     
     const emailInput = screen.getByLabelText('Work Email');
     
@@ -78,7 +93,7 @@ describe('LoginForm', () => {
 
   it('clears validation errors when user corrects input', async () => {
     const user = userEvent.setup();
-    render(<LoginForm onSuccess={mockOnSuccess} onSwitchToRegister={mockOnSwitchToRegister} />);
+    renderWithRouter(<LoginForm />);
     
     const emailInput = screen.getByLabelText('Work Email');
     
@@ -98,7 +113,7 @@ describe('LoginForm', () => {
 
   it('shows and hides password when toggle button is clicked', async () => {
     const user = userEvent.setup();
-    render(<LoginForm onSuccess={mockOnSuccess} onSwitchToRegister={mockOnSwitchToRegister} />);
+    renderWithRouter(<LoginForm />);
     
     const passwordInput = screen.getByLabelText('Password');
     const toggleButton = screen.getByLabelText('Show password');
@@ -121,7 +136,7 @@ describe('LoginForm', () => {
   });
 
   it('disables submit button when form is invalid', () => {
-    render(<LoginForm onSuccess={mockOnSuccess} onSwitchToRegister={mockOnSwitchToRegister} />);
+    renderWithRouter(<LoginForm />);
     
     const submitButton = screen.getByRole('button', { name: 'Sign in' });
     expect(submitButton).toBeDisabled();
@@ -129,7 +144,7 @@ describe('LoginForm', () => {
 
   it('disables submit button when fields are empty', async () => {
     const user = userEvent.setup();
-    render(<LoginForm onSuccess={mockOnSuccess} onSwitchToRegister={mockOnSwitchToRegister} />);
+    renderWithRouter(<LoginForm />);
     
     const emailInput = screen.getByLabelText('Work Email');
     const submitButton = screen.getByRole('button', { name: 'Sign in' });
@@ -142,7 +157,7 @@ describe('LoginForm', () => {
 
   it('enables submit button when form is valid', async () => {
     const user = userEvent.setup();
-    render(<LoginForm onSuccess={mockOnSuccess} onSwitchToRegister={mockOnSwitchToRegister} />);
+    renderWithRouter(<LoginForm />);
     
     // Fill in all fields with valid data
     await user.type(screen.getByLabelText('Work Email'), 'test@getcovered.io');
@@ -154,12 +169,12 @@ describe('LoginForm', () => {
     });
   });
 
-  it('submits form successfully and stores token', async () => {
+  it('submits form successfully and navigates to welcome page', async () => {
     const user = userEvent.setup();
     const mockToken = { access_token: 'test-token', token_type: 'bearer' };
     mockedAuthAPI.login.mockResolvedValue(mockToken);
     
-    render(<LoginForm onSuccess={mockOnSuccess} onSwitchToRegister={mockOnSwitchToRegister} />);
+    renderWithRouter(<LoginForm />);
     
     // Fill in valid form data
     await user.type(screen.getByLabelText('Work Email'), 'test@getcovered.io');
@@ -175,7 +190,7 @@ describe('LoginForm', () => {
         password: 'password123',
       });
       expect(localStorageMock.setItem).toHaveBeenCalledWith('token', 'test-token');
-      expect(mockOnSuccess).toHaveBeenCalledWith('test-token');
+      expect(mockNavigate).toHaveBeenCalledWith('/welcome');
     });
   });
 
@@ -186,7 +201,7 @@ describe('LoginForm', () => {
       response: { data: { detail: errorMessage } }
     });
     
-    render(<LoginForm onSuccess={mockOnSuccess} onSwitchToRegister={mockOnSwitchToRegister} />);
+    renderWithRouter(<LoginForm />);
     
     // Fill in valid form data
     await user.type(screen.getByLabelText('Work Email'), 'test@getcovered.io');
@@ -205,7 +220,7 @@ describe('LoginForm', () => {
     const user = userEvent.setup();
     mockedAuthAPI.login.mockRejectedValue(new Error('Network error'));
     
-    render(<LoginForm onSuccess={mockOnSuccess} onSwitchToRegister={mockOnSwitchToRegister} />);
+    renderWithRouter(<LoginForm />);
     
     // Fill in valid form data
     await user.type(screen.getByLabelText('Work Email'), 'test@getcovered.io');
@@ -229,7 +244,7 @@ describe('LoginForm', () => {
     });
     mockedAuthAPI.login.mockReturnValue(submitPromise);
     
-    render(<LoginForm onSuccess={mockOnSuccess} onSwitchToRegister={mockOnSwitchToRegister} />);
+    renderWithRouter(<LoginForm />);
     
     // Fill in valid form data
     await user.type(screen.getByLabelText('Work Email'), 'test@getcovered.io');
@@ -258,7 +273,7 @@ describe('LoginForm', () => {
     });
     mockedAuthAPI.login.mockReturnValue(submitPromise);
     
-    render(<LoginForm onSuccess={mockOnSuccess} onSwitchToRegister={mockOnSwitchToRegister} />);
+    renderWithRouter(<LoginForm />);
     
     // Fill in valid form data
     await user.type(screen.getByLabelText('Work Email'), 'test@getcovered.io');
@@ -278,19 +293,19 @@ describe('LoginForm', () => {
     resolvePromise!({ access_token: 'test-token', token_type: 'bearer' });
   });
 
-  it('calls onSwitchToRegister when register link is clicked', async () => {
+  it('navigates to register page when register link is clicked', async () => {
     const user = userEvent.setup();
-    render(<LoginForm onSuccess={mockOnSuccess} onSwitchToRegister={mockOnSwitchToRegister} />);
+    renderWithRouter(<LoginForm />);
     
     const registerLink = screen.getByText('Don\'t have an account? Create one');
     await user.click(registerLink);
     
-    expect(mockOnSwitchToRegister).toHaveBeenCalledTimes(1);
+    expect(mockNavigate).toHaveBeenCalledWith('/register');
   });
 
   it('prevents form submission when validation fails', async () => {
     const user = userEvent.setup();
-    render(<LoginForm onSuccess={mockOnSuccess} onSwitchToRegister={mockOnSwitchToRegister} />);
+    renderWithRouter(<LoginForm />);
     
     // Fill in invalid email
     await user.type(screen.getByLabelText('Work Email'), 'invalid-email');
@@ -313,7 +328,7 @@ describe('LoginForm', () => {
       response: { data: { detail: errorMessage } }
     });
     
-    render(<LoginForm onSuccess={mockOnSuccess} onSwitchToRegister={mockOnSwitchToRegister} />);
+    renderWithRouter(<LoginForm />);
     
     // Fill in valid form data and submit to trigger error
     await user.type(screen.getByLabelText('Work Email'), 'test@getcovered.io');

@@ -1,5 +1,6 @@
 import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import RegistrationForm from '../RegistrationForm';
@@ -12,6 +13,13 @@ jest.mock('../../utils/api', () => ({
   },
 }));
 
+// Mock React Router navigation
+const mockNavigate = jest.fn();
+jest.mock('react-router-dom', () => ({
+  ...jest.requireActual('react-router-dom'),
+  useNavigate: () => mockNavigate,
+}));
+
 // Mock the PasswordStrengthMeter component
 jest.mock('../PasswordStrengthMeter', () => {
   return function MockPasswordStrengthMeter({ strength }: { strength: any }) {
@@ -19,17 +27,24 @@ jest.mock('../PasswordStrengthMeter', () => {
   };
 });
 
+const renderWithRouter = (component: React.ReactElement) => {
+  return render(
+    <MemoryRouter>
+      {component}
+    </MemoryRouter>
+  );
+};
+
 describe('RegistrationForm', () => {
-  const mockOnSuccess = jest.fn();
-  const mockOnSwitchToLogin = jest.fn();
   const mockedAuthAPI = authAPI as jest.Mocked<typeof authAPI>;
 
   beforeEach(() => {
     jest.clearAllMocks();
+    mockNavigate.mockClear();
   });
 
   it('renders all form fields', () => {
-    render(<RegistrationForm onSuccess={mockOnSuccess} />);
+    renderWithRouter(<RegistrationForm />);
     
     expect(screen.getByLabelText('First Name')).toBeInTheDocument();
     expect(screen.getByLabelText('Last Name')).toBeInTheDocument();
@@ -39,21 +54,15 @@ describe('RegistrationForm', () => {
     expect(screen.getByRole('button', { name: 'Create account' })).toBeInTheDocument();
   });
 
-  it('renders switch to login button when onSwitchToLogin is provided', () => {
-    render(<RegistrationForm onSuccess={mockOnSuccess} onSwitchToLogin={mockOnSwitchToLogin} />);
+  it('renders login link', () => {
+    renderWithRouter(<RegistrationForm />);
     
     expect(screen.getByText('Already have an account? Sign in')).toBeInTheDocument();
   });
 
-  it('does not render switch to login button when onSwitchToLogin is not provided', () => {
-    render(<RegistrationForm onSuccess={mockOnSuccess} />);
-    
-    expect(screen.queryByText('Already have an account? Sign in')).not.toBeInTheDocument();
-  });
-
   it('displays validation errors for empty fields', async () => {
     const user = userEvent.setup();
-    render(<RegistrationForm onSuccess={mockOnSuccess} />);
+    renderWithRouter(<RegistrationForm />);
     
     // Focus and blur first name field to trigger validation
     const firstNameInput = screen.getByLabelText('First Name');
@@ -71,7 +80,7 @@ describe('RegistrationForm', () => {
 
   it('validates email format and domain', async () => {
     const user = userEvent.setup();
-    render(<RegistrationForm onSuccess={mockOnSuccess} />);
+    renderWithRouter(<RegistrationForm />);
     
     const emailInput = screen.getByLabelText('Work Email');
     
@@ -98,7 +107,7 @@ describe('RegistrationForm', () => {
 
   it('validates password strength', async () => {
     const user = userEvent.setup();
-    render(<RegistrationForm onSuccess={mockOnSuccess} />);
+    renderWithRouter(<RegistrationForm />);
     
     const passwordInput = screen.getByLabelText('Password');
     
@@ -111,7 +120,7 @@ describe('RegistrationForm', () => {
 
   it('validates password confirmation', async () => {
     const user = userEvent.setup();
-    render(<RegistrationForm onSuccess={mockOnSuccess} />);
+    renderWithRouter(<RegistrationForm />);
     
     const passwordInput = screen.getByLabelText('Password');
     const confirmPasswordInput = screen.getByLabelText('Confirm Password');
@@ -134,7 +143,7 @@ describe('RegistrationForm', () => {
 
   it('shows and hides password fields when toggle buttons are clicked', async () => {
     const user = userEvent.setup();
-    render(<RegistrationForm onSuccess={mockOnSuccess} />);
+    renderWithRouter(<RegistrationForm />);
     
     const passwordInput = screen.getByLabelText('Password');
     const confirmPasswordInput = screen.getByLabelText('Confirm Password');
@@ -166,7 +175,7 @@ describe('RegistrationForm', () => {
   });
 
   it('disables submit button when form is invalid', () => {
-    render(<RegistrationForm onSuccess={mockOnSuccess} />);
+    renderWithRouter(<RegistrationForm />);
     
     const submitButton = screen.getByRole('button', { name: 'Create account' });
     expect(submitButton).toBeDisabled();
@@ -174,7 +183,7 @@ describe('RegistrationForm', () => {
 
   it('enables submit button when form is valid', async () => {
     const user = userEvent.setup();
-    render(<RegistrationForm onSuccess={mockOnSuccess} />);
+    renderWithRouter(<RegistrationForm />);
     
     // Fill in all fields with valid data
     await user.type(screen.getByLabelText('First Name'), 'John');
@@ -189,12 +198,12 @@ describe('RegistrationForm', () => {
     });
   });
 
-  it('submits form successfully', async () => {
+  it('submits form successfully and navigates to login', async () => {
     const user = userEvent.setup();
     const mockUser = { id: 1, email: 'john.doe@getcovered.io', first_name: 'John', last_name: 'Doe', created_at: '2023-01-01T00:00:00Z' };
     mockedAuthAPI.register.mockResolvedValue(mockUser);
     
-    render(<RegistrationForm onSuccess={mockOnSuccess} />);
+    renderWithRouter(<RegistrationForm />);
     
     // Fill in valid form data
     await user.type(screen.getByLabelText('First Name'), 'John');
@@ -215,7 +224,7 @@ describe('RegistrationForm', () => {
         password: 'StrongPassword123!@#',
         confirm_password: 'StrongPassword123!@#',
       });
-      expect(mockOnSuccess).toHaveBeenCalledWith(mockUser);
+      expect(mockNavigate).toHaveBeenCalledWith('/login');
     });
   });
 
@@ -226,7 +235,7 @@ describe('RegistrationForm', () => {
       response: { data: { detail: errorMessage } }
     });
     
-    render(<RegistrationForm onSuccess={mockOnSuccess} />);
+    renderWithRouter(<RegistrationForm />);
     
     // Fill in valid form data
     await user.type(screen.getByLabelText('First Name'), 'John');
@@ -253,7 +262,7 @@ describe('RegistrationForm', () => {
     });
     mockedAuthAPI.register.mockReturnValue(submitPromise);
     
-    render(<RegistrationForm onSuccess={mockOnSuccess} />);
+    renderWithRouter(<RegistrationForm />);
     
     // Fill in valid form data
     await user.type(screen.getByLabelText('First Name'), 'John');
@@ -276,19 +285,19 @@ describe('RegistrationForm', () => {
     resolvePromise!({ id: 1, email: 'john.doe@getcovered.io', first_name: 'John', last_name: 'Doe', created_at: '2023-01-01T00:00:00Z' });
   });
 
-  it('calls onSwitchToLogin when switch to login button is clicked', async () => {
+  it('navigates to login when login link is clicked', async () => {
     const user = userEvent.setup();
-    render(<RegistrationForm onSuccess={mockOnSuccess} onSwitchToLogin={mockOnSwitchToLogin} />);
+    renderWithRouter(<RegistrationForm />);
     
-    const switchButton = screen.getByText('Already have an account? Sign in');
-    await user.click(switchButton);
+    const loginLink = screen.getByText('Already have an account? Sign in');
+    await user.click(loginLink);
     
-    expect(mockOnSwitchToLogin).toHaveBeenCalledTimes(1);
+    expect(mockNavigate).toHaveBeenCalledWith('/login');
   });
 
   it('shows password strength meter when password is entered', async () => {
     const user = userEvent.setup();
-    render(<RegistrationForm onSuccess={mockOnSuccess} />);
+    renderWithRouter(<RegistrationForm />);
     
     const passwordInput = screen.getByLabelText('Password');
     
