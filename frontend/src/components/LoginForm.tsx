@@ -1,14 +1,11 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { UserLogin } from '../types/auth';
 import { validateEmail } from '../utils/validation';
 import { authAPI } from '../utils/api';
 
-interface LoginFormProps {
-  onSuccess: (token: string) => void;
-  onSwitchToRegister: () => void;
-}
-
-const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onSwitchToRegister }) => {
+const LoginForm: React.FC = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState<UserLogin>({
     email: '',
     password: '',
@@ -57,7 +54,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onSwitchToRegister }) 
     try {
       const tokenData = await authAPI.login(formData);
       localStorage.setItem('token', tokenData.access_token);
-      onSuccess(tokenData.access_token);
+      navigate('/welcome');
     } catch (error: any) {
       const message = error.response?.data?.detail || 'Login failed. Please check your credentials.';
       setSubmitError(message);
@@ -171,7 +168,7 @@ const LoginForm: React.FC<LoginFormProps> = ({ onSuccess, onSwitchToRegister }) 
             <div className="text-center">
               <button
                 type="button"
-                onClick={onSwitchToRegister}
+                onClick={() => navigate('/register')}
                 className="text-primary-600 hover:text-primary-500 text-sm font-medium"
               >
                 Don't have an account? Create one
