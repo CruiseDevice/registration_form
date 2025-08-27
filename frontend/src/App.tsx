@@ -54,15 +54,10 @@ function App() {
   if (currentState === 'register') {
     return (
       <div className="App">
-        <RegistrationForm onSuccess={handleRegistrationSuccess} />
-        <div className="text-center mt-4">
-          <button
-            onClick={handleSwitchToLogin}
-            className="text-primary-600 hover:text-primary-500 text-sm font-medium"
-          >
-            Already have an account? Sign in
-          </button>
-        </div>
+        <RegistrationForm
+          onSuccess={handleRegistrationSuccess}
+          onSwitchToLogin={handleSwitchToLogin}
+        />
       </div>
     );
   }
