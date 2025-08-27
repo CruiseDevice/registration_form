@@ -12,6 +12,7 @@ from app.auth import get_password_hash
 # Create tables
 Base.metadata.create_all(bind=engine)
 
+
 def create_fake_users():
     """Create 10 fake users with @getcovered.io emails and valid passwords"""
     

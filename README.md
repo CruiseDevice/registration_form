@@ -262,6 +262,17 @@ alembic upgrade head
 ```bash
 # Backend testing (add pytest)
 pip install pytest
+
+# Run all schema tests
+pytest tests/test_schemas.py
+
+# Run with verbose output
+pytest tests/test_schemas.py -v
+
+# Run specific test class
+pytest tests/test_schemas.py::TestUserCreateSchema
+
+# Run all tests in the tests directory
 pytest
 
 # Frontend testing  
@@ -281,3 +292,79 @@ This project was built using AI assistance. The complete development process, in
 - Multi-tool AI assistance strategy
 - Iterative problem-solving with AI feedback
 - Real-time debugging and issue resolution
+
+## Technical Trade-offs and Decisions
+
+### 1. Database Technology
+**Decision**: SQLite
+
+**Rationale**: Chose SQLite for simplicity and ease of setup during development
+
+**Trade-offs**:
+- ✅ Simple setup, no external dependencies
+- ❌ Limited concurrent users, not production-ready
+
+**Alternative Considered**: PostgreSQL with Docker
+
+**Why Not Chosen**: Added complexity for assessment purposes
+
+### 2. Authentication Strategy
+**Decision**: JWT tokens
+
+**Rationale**: Stateless authentication works well with React frontend
+
+**Trade-offs**:
+- ✅ Scalable, stateless, frontend-friendly
+- ❌ Can't invalidate tokens, security considerations
+
+**Alternative Considered**: Session-based with Redis
+
+**Why Not Chosen**: Added infrastructure complexity
+
+### 3. Frontend State Management
+
+**Decision**: React local state (useState)
+
+**Rationale**: Sufficient for small application scope
+
+**Trade-offs**:
+- ✅ Simple, no external dependencies
+- ❌ Complexity grows with app size
+
+**Alternative Considered**: Redux Toolkit or Zustand
+
+**Why Not Chosen**: Over-engineering for current requirements
+
+### 4. Password Security
+
+**Decision**: bcrypt with 12+ character requirements
+
+**Rationale**: Strong security with reasonable UX
+
+**Trade-offs**:
+- ✅ Strong security, widely supported
+- ❌ Slower than newer algorithms
+
+**Alternative Considered**: Argon2
+
+**Why Not Chosen**: Less library support, potential compatibility issues
+
+### 5. Validation Strategy
+
+**Decision**: Client-side + Server-side validation
+
+**Rationale**: Best user experience with security
+
+**Trade-offs**:
+- ✅ Immediate feedback + security
+- ❌ Code duplication, maintenance overhead
+
+**Alternative Considered**: Server-only validation
+
+**Why Not Chosen**: Poor user experience
+
+## Future Considerations
+- **Production**: Migrate to PostgreSQL and proper session management
+- **Scale**: Implement Redux/Zustand for state management
+- **Security**: Consider Argon2 for password hashing
+- **Performance**: Add Redis caching layer
