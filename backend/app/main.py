@@ -19,9 +19,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(auth_router, prefix="/api")
-
-# Mount static files (React build)
+# Mount static files (React build) FIRST
 # Look for build files in multiple possible locations
 possible_paths = [
     os.path.join(os.path.dirname(os.path.dirname(__file__)), "..", "frontend", "build"),
@@ -40,19 +38,24 @@ if static_dir and os.path.exists(os.path.join(static_dir, "index.html")):
     static_files_dir = os.path.join(static_dir, "static")
     if os.path.exists(static_files_dir):
         app.mount("/static", StaticFiles(directory=static_files_dir), name="static")
-    
+
+# Include API routes AFTER mounting static files
+app.include_router(auth_router, prefix="/api")
+
+if static_dir and os.path.exists(os.path.join(static_dir, "index.html")):
     @app.get("/")
     def read_index():
         return FileResponse(os.path.join(static_dir, "index.html"))
     
-    # Catch-all route for React Router (SPA)
-    @app.get("/{full_path:path}")
+    # Catch-all route for React Router (SPA) - more specific pattern to avoid API conflicts
+    @app.get("/{full_path:path}", include_in_schema=False)
     def catch_all(full_path: str):
-        # If it's an API route, let it pass through
-        if full_path.startswith("api/"):
-            return {"message": "User Registration API is running"}
-        # Otherwise serve React app
-        return FileResponse(os.path.join(static_dir, "index.html"))
+        # Only serve React app for non-API routes
+        if not full_path.startswith("api"):
+            return FileResponse(os.path.join(static_dir, "index.html"))
+        # For API routes that don't exist, let FastAPI handle the 404
+        from fastapi import HTTPException
+        raise HTTPException(status_code=404, detail="API endpoint not found")
 else:
     @app.get("/")
     def read_root():
