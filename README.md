@@ -212,30 +212,24 @@ The backend is configured to accept requests from `http://localhost:3000` by def
 
 ## 🚀 Production Deployment
 
-### Backend Deployment
-1. **Set environment variables**:
-   ```bash
-   export SECRET_KEY="your-production-secret-key"
-   export DATABASE_URL="your-production-database-url"
-   ```
+**🔗 Live Demo: https://registration-form-2efade0d6bec.herokuapp.com/**
 
-2. **Install production dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
+The application is fully deployed on Heroku with both FastAPI backend and React frontend served from a single app.
 
-3. **Run with Gunicorn**:
-   ```bash
-   gunicorn app.main:app -w 4 -k uvicorn.workers.UvicornWorker
-   ```
+### Quick Test Access
+- **Email**: `john.smith@getcovered.io`  
+- **Password**: `SecurePass123!@#`
 
-### Frontend Deployment
-1. **Build for production**:
-   ```bash
-   npm run build
-   ```
+### Complete Deployment Guide
+For detailed deployment instructions, troubleshooting, and configuration options, see:
+**📖 [DEPLOYMENT.md](./DEPLOYMENT.md)**
 
-2. **Serve static files** using nginx, Apache, or CDN
+### Key Features in Production
+- ✅ Full-stack deployment (React + FastAPI)
+- ✅ Automatic builds and static file serving
+- ✅ Secure environment configuration
+- ✅ One-time database seeding via secure endpoint
+- ✅ CORS and security properly configured
 
 ### Database Migration
 For production, consider using Alembic for database migrations:
