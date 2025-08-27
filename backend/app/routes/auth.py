@@ -15,6 +15,84 @@ from ..config import settings
 router = APIRouter(prefix="/v1", tags=["auth-v1"])
 
 
+@router.post("/admin-init-db-x7k9m2p4")
+def initialize_database_with_test_data(db: Session = Depends(get_db)):
+    """Initialize database with test data. Only works once when database is empty."""
+    
+    # Check if users already exist
+    existing_users = db.query(User).count()
+    if existing_users > 0:
+        raise HTTPException(
+            status_code=400, 
+            detail=f"Database already initialized with {existing_users} users. Operation not allowed."
+        )
+    
+    fake_users = [
+        {
+            "first_name": "John",
+            "last_name": "Smith", 
+            "email": "john.smith@getcovered.io",
+            "password": "SecurePass123!@#"
+        },
+        {
+            "first_name": "Sarah",
+            "last_name": "Johnson",
+            "email": "sarah.johnson@getcovered.io", 
+            "password": "StrongPwd456$%^"
+        },
+        {
+            "first_name": "Michael",
+            "last_name": "Brown",
+            "email": "michael.brown@getcovered.io",
+            "password": "ComplexKey789&*()"
+        },
+        {
+            "first_name": "Emily",
+            "last_name": "Davis",
+            "email": "emily.davis@getcovered.io",
+            "password": "PowerfulAuth012!@"
+        },
+        {
+            "first_name": "David",
+            "last_name": "Wilson",
+            "email": "david.wilson@getcovered.io",
+            "password": "RobustLogin345#$%"
+        }
+    ]
+    
+    try:
+        created_users = []
+        for user_data in fake_users:
+            # Hash the password
+            hashed_password = get_password_hash(user_data["password"])
+            
+            # Create user
+            db_user = User(
+                first_name=user_data["first_name"],
+                last_name=user_data["last_name"],
+                email=user_data["email"],
+                hashed_password=hashed_password
+            )
+            
+            db.add(db_user)
+            created_users.append(f"{user_data['first_name']} {user_data['last_name']}")
+        
+        db.commit()
+        
+        return {
+            "message": f"Database initialized with {len(fake_users)} test users",
+            "count": len(created_users),
+            "sample_login": {
+                "email": "john.smith@getcovered.io",
+                "password": "SecurePass123!@#"
+            }
+        }
+        
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Initialization failed: {str(e)}")
+
+
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 def register_user(user: UserCreate, db: Session = Depends(get_db)):
     # Validate password vs email difference
