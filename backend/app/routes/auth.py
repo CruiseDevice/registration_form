@@ -12,7 +12,7 @@ from ..auth import (
 )
 from ..config import settings
 
-router = APIRouter()
+router = APIRouter(prefix="/v1", tags=["auth-v1"])
 
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)

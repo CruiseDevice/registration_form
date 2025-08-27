@@ -8,44 +8,11 @@ from unittest.mock import patch
 
 from app.main import app
 from app.database import get_db, Base
-from app.models import User
+from app.models import User  # Import User model to register it with Base
 from app.auth import create_access_token, verify_password, get_password_hash
 
 
-# Create test database
-SQLALCHEMY_DATABASE_URL = "sqlite:///./test_integration.db"
-engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-
-def override_get_db():
-    """Override database dependency for testing"""
-    try:
-        db = TestingSessionLocal()
-        yield db
-    finally:
-        db.close()
-
-
-app.dependency_overrides[get_db] = override_get_db
-
-
-@pytest.fixture(scope="function")
-def test_db():
-    """Create and clean up test database for each test"""
-    Base.metadata.create_all(bind=engine)
-    db = TestingSessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-        Base.metadata.drop_all(bind=engine)
-
-
-@pytest.fixture(scope="function")
-def client(test_db):
-    """Create test client"""
-    return TestClient(app)
+# Test database setup is now handled in conftest.py
 
 
 class TestEndToEndUserWorkflows:
@@ -63,7 +30,7 @@ class TestEndToEndUserWorkflows:
             "confirm_password": "SecurePassword123!"
         }
         
-        register_response = client.post("/api/register", json=registration_data)
+        register_response = client.post("/api/v1/register", json=registration_data)
         assert register_response.status_code == 201
         
         user_data = register_response.json()
@@ -84,7 +51,7 @@ class TestEndToEndUserWorkflows:
             "password": registration_data["password"]
         }
         
-        login_response = client.post("/api/login", json=login_data)
+        login_response = client.post("/api/v1/login", json=login_data)
         assert login_response.status_code == 200
         
         token_data = login_response.json()
@@ -96,7 +63,7 @@ class TestEndToEndUserWorkflows:
         auth_headers = {"Authorization": f"Bearer {access_token}"}
         
         # Step 3: Get user profile
-        profile_response = client.get("/api/profile", headers=auth_headers)
+        profile_response = client.get("/api/v1/profile", headers=auth_headers)
         assert profile_response.status_code == 200
         
         profile_data = profile_response.json()
@@ -111,7 +78,7 @@ class TestEndToEndUserWorkflows:
             "last_name": "Profile"
         }
         
-        update_response = client.put("/api/profile", json=update_data, headers=auth_headers)
+        update_response = client.put("/api/v1/profile", json=update_data, headers=auth_headers)
         assert update_response.status_code == 200
         
         updated_profile = update_response.json()
@@ -128,7 +95,7 @@ class TestEndToEndUserWorkflows:
         assert db_user_updated.updated_at is not None  # Should be set after update
         
         # Step 5: Verify profile update persists
-        final_profile_response = client.get("/api/profile", headers=auth_headers)
+        final_profile_response = client.get("/api/v1/profile", headers=auth_headers)
         assert final_profile_response.status_code == 200
         
         final_profile = final_profile_response.json()
@@ -167,7 +134,7 @@ class TestEndToEndUserWorkflows:
         
         # Register all users
         for user_data in users:
-            register_response = client.post("/api/register", json=user_data)
+            register_response = client.post("/api/v1/register", json=user_data)
             assert register_response.status_code == 201
             user_ids.append(register_response.json()["id"])
         
@@ -177,7 +144,7 @@ class TestEndToEndUserWorkflows:
                 "email": user_data["email"],
                 "password": user_data["password"]
             }
-            login_response = client.post("/api/login", json=login_data)
+            login_response = client.post("/api/v1/login", json=login_data)
             assert login_response.status_code == 200
             tokens.append(login_response.json()["access_token"])
         
@@ -189,7 +156,7 @@ class TestEndToEndUserWorkflows:
                 "last_name": f"Independent{i+1}"
             }
             
-            update_response = client.put("/api/profile", json=update_data, headers=auth_headers)
+            update_response = client.put("/api/v1/profile", json=update_data, headers=auth_headers)
             assert update_response.status_code == 200
             
             updated_profile = update_response.json()
@@ -200,7 +167,7 @@ class TestEndToEndUserWorkflows:
         # Verify each user's profile is correct and independent
         for i, token in enumerate(tokens):
             auth_headers = {"Authorization": f"Bearer {token}"}
-            profile_response = client.get("/api/profile", headers=auth_headers)
+            profile_response = client.get("/api/v1/profile", headers=auth_headers)
             assert profile_response.status_code == 200
             
             profile = profile_response.json()
@@ -225,7 +192,7 @@ class TestCrossComponentIntegration:
         }
         
         # Register user (password should be hashed)
-        register_response = client.post("/api/register", json=user_data)
+        register_response = client.post("/api/v1/register", json=user_data)
         assert register_response.status_code == 201
         
         # Check database - password should be hashed, not plain text
@@ -244,7 +211,7 @@ class TestCrossComponentIntegration:
             "password": user_data["password"]
         }
         
-        login_response = client.post("/api/login", json=login_data)
+        login_response = client.post("/api/v1/login", json=login_data)
         assert login_response.status_code == 200
         
         # Login should fail with wrong password
@@ -253,7 +220,7 @@ class TestCrossComponentIntegration:
             "password": "WrongPassword123!"
         }
         
-        wrong_login_response = client.post("/api/login", json=wrong_login_data)
+        wrong_login_response = client.post("/api/v1/login", json=wrong_login_data)
         assert wrong_login_response.status_code == 401
     
     def test_jwt_token_lifecycle_integration(self, client, test_db):
@@ -268,19 +235,19 @@ class TestCrossComponentIntegration:
             "confirm_password": "JWTPassword123!"
         }
         
-        client.post("/api/register", json=user_data)
+        client.post("/api/v1/register", json=user_data)
         
         login_data = {
             "email": user_data["email"],
             "password": user_data["password"]
         }
         
-        login_response = client.post("/api/login", json=login_data)
+        login_response = client.post("/api/v1/login", json=login_data)
         token = login_response.json()["access_token"]
         
         # Token should work for authentication
         auth_headers = {"Authorization": f"Bearer {token}"}
-        profile_response = client.get("/api/profile", headers=auth_headers)
+        profile_response = client.get("/api/v1/profile", headers=auth_headers)
         assert profile_response.status_code == 200
         
         # Test with expired token
@@ -290,12 +257,12 @@ class TestCrossComponentIntegration:
         )
         expired_headers = {"Authorization": f"Bearer {expired_token}"}
         
-        expired_response = client.get("/api/profile", headers=expired_headers)
+        expired_response = client.get("/api/v1/profile", headers=expired_headers)
         assert expired_response.status_code == 401
         
         # Test with invalid token
         invalid_headers = {"Authorization": "Bearer invalid.token.here"}
-        invalid_response = client.get("/api/profile", headers=invalid_headers)
+        invalid_response = client.get("/api/v1/profile", headers=invalid_headers)
         assert invalid_response.status_code == 401
     
     def test_database_transaction_integration(self, client, test_db):
@@ -310,7 +277,7 @@ class TestCrossComponentIntegration:
             "confirm_password": "TransactionTest123!"
         }
         
-        register_response = client.post("/api/register", json=user_data)
+        register_response = client.post("/api/v1/register", json=user_data)
         assert register_response.status_code == 201
         
         # User should exist in database
@@ -318,7 +285,7 @@ class TestCrossComponentIntegration:
         assert db_user is not None
         
         # Test duplicate registration (should fail)
-        duplicate_response = client.post("/api/register", json=user_data)
+        duplicate_response = client.post("/api/v1/register", json=user_data)
         assert duplicate_response.status_code == 400
         
         # Original user should still exist (transaction integrity)
@@ -346,7 +313,7 @@ class TestErrorHandlingAndEdgeCases:
             "confirm_password": "Testuser12345!"
         }
         
-        response = client.post("/api/register", json=similar_data)
+        response = client.post("/api/v1/register", json=similar_data)
         # This should either succeed or fail based on similarity validation
         assert response.status_code in [201, 400]
         
@@ -359,7 +326,7 @@ class TestErrorHandlingAndEdgeCases:
             "confirm_password": "ValidPassword123!"
         }
         
-        response = client.post("/api/register", json=invalid_domain_data)
+        response = client.post("/api/v1/register", json=invalid_domain_data)
         assert response.status_code == 422
         
         # Test password strength
@@ -371,7 +338,7 @@ class TestErrorHandlingAndEdgeCases:
             "confirm_password": "weak"
         }
         
-        response = client.post("/api/register", json=weak_password_data)
+        response = client.post("/api/v1/register", json=weak_password_data)
         assert response.status_code == 422
     
     def test_authentication_edge_cases(self, client, test_db):
@@ -386,7 +353,7 @@ class TestErrorHandlingAndEdgeCases:
             "confirm_password": "AuthTest123!"
         }
         
-        client.post("/api/register", json=user_data)
+        client.post("/api/v1/register", json=user_data)
         
         # Test login with wrong credentials
         wrong_credentials = [
@@ -397,13 +364,13 @@ class TestErrorHandlingAndEdgeCases:
         ]
         
         for creds in wrong_credentials:
-            response = client.post("/api/login", json=creds)
+            response = client.post("/api/v1/login", json=creds)
             assert response.status_code in [401, 422]
         
         # Test accessing protected endpoints without token
         protected_endpoints = [
-            ("GET", "/api/profile"),
-            ("PUT", "/api/profile", {"first_name": "New", "last_name": "Name"})
+            ("GET", "/api/v1/profile"),
+            ("PUT", "/api/v1/profile", {"first_name": "New", "last_name": "Name"})
         ]
         
         for method, endpoint, *data in protected_endpoints:
@@ -426,9 +393,9 @@ class TestErrorHandlingAndEdgeCases:
             "confirm_password": "ProfileTest123!"
         }
         
-        client.post("/api/register", json=user_data)
+        client.post("/api/v1/register", json=user_data)
         
-        login_response = client.post("/api/login", json={
+        login_response = client.post("/api/v1/login", json={
             "email": user_data["email"],
             "password": user_data["password"]
         })
@@ -446,7 +413,7 @@ class TestErrorHandlingAndEdgeCases:
         ]
         
         for invalid_data in invalid_updates:
-            response = client.put("/api/profile", json=invalid_data, headers=auth_headers)
+            response = client.put("/api/v1/profile", json=invalid_data, headers=auth_headers)
             # Should either succeed (if empty strings allowed) or fail with validation error
             assert response.status_code in [200, 422]
     
@@ -462,7 +429,7 @@ class TestErrorHandlingAndEdgeCases:
             "confirm_password": "ConcurrentTest123!"
         }
         
-        client.post("/api/register", json=user_data)
+        client.post("/api/v1/register", json=user_data)
         
         # Login multiple times (simulate multiple sessions)
         login_data = {
@@ -472,7 +439,7 @@ class TestErrorHandlingAndEdgeCases:
         
         tokens = []
         for _ in range(3):
-            login_response = client.post("/api/login", json=login_data)
+            login_response = client.post("/api/v1/login", json=login_data)
             tokens.append(login_response.json()["access_token"])
         
         # All tokens should work independently
@@ -480,7 +447,7 @@ class TestErrorHandlingAndEdgeCases:
             auth_headers = {"Authorization": f"Bearer {token}"}
             
             # Each session can access profile
-            profile_response = client.get("/api/profile", headers=auth_headers)
+            profile_response = client.get("/api/v1/profile", headers=auth_headers)
             assert profile_response.status_code == 200
             
             # Each session can update profile (last update wins)
@@ -489,7 +456,7 @@ class TestErrorHandlingAndEdgeCases:
                 "last_name": f"Update{i}"
             }
             
-            update_response = client.put("/api/profile", json=update_data, headers=auth_headers)
+            update_response = client.put("/api/v1/profile", json=update_data, headers=auth_headers)
             assert update_response.status_code == 200
 
 
@@ -508,11 +475,11 @@ class TestSystemIntegration:
         }
         
         # Register user
-        register_response = client.post("/api/register", json=user_data)
+        register_response = client.post("/api/v1/register", json=user_data)
         registered_user = register_response.json()
         
         # Login user
-        login_response = client.post("/api/login", json={
+        login_response = client.post("/api/v1/login", json={
             "email": user_data["email"],
             "password": user_data["password"]
         })
@@ -521,7 +488,7 @@ class TestSystemIntegration:
         auth_headers = {"Authorization": f"Bearer {token}"}
         
         # Get profile
-        profile_response = client.get("/api/profile", headers=auth_headers)
+        profile_response = client.get("/api/v1/profile", headers=auth_headers)
         profile_user = profile_response.json()
         
         # Check consistency across responses
@@ -531,7 +498,7 @@ class TestSystemIntegration:
             assert registered_user[field] == profile_user[field], f"Field {field} inconsistent"
         
         # Update profile
-        update_response = client.put("/api/profile", json={
+        update_response = client.put("/api/v1/profile", json={
             "first_name": "Updated",
             "last_name": "Consistency"
         }, headers=auth_headers)
@@ -579,7 +546,7 @@ class TestSystemIntegration:
         successful_registrations = 0
         
         for user_data in users_to_register:
-            response = client.post("/api/register", json=user_data)
+            response = client.post("/api/v1/register", json=user_data)
             if response.status_code == 201:
                 successful_registrations += 1
         
@@ -611,10 +578,10 @@ class TestSystemIntegration:
         
         # Test that all main endpoints are accessible
         endpoints_to_test = [
-            ("POST", "/api/register"),  # Should return validation error but endpoint exists
-            ("POST", "/api/login"),     # Should return validation error but endpoint exists
-            ("GET", "/api/profile"),    # Should return 403 but endpoint exists
-            ("PUT", "/api/profile"),    # Should return 403 but endpoint exists
+            ("POST", "/api/v1/register"),  # Should return validation error but endpoint exists
+            ("POST", "/api/v1/login"),     # Should return validation error but endpoint exists
+            ("GET", "/api/v1/profile"),    # Should return 403 but endpoint exists
+            ("PUT", "/api/v1/profile"),    # Should return 403 but endpoint exists
         ]
         
         for method, endpoint in endpoints_to_test:
