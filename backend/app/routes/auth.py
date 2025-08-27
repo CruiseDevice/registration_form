@@ -8,9 +8,9 @@ from ..auth import (
     get_password_hash, 
     verify_password, 
     create_access_token, 
-    get_current_user,
-    ACCESS_TOKEN_EXPIRE_MINUTES
+    get_current_user
 )
+from ..config import settings
 
 router = APIRouter()
 
@@ -55,7 +55,7 @@ def login_user(user_credentials: UserLogin, db: Session = Depends(get_db)):
             headers={"WWW-Authenticate": "Bearer"},
         )
     
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": user.email}, expires_delta=access_token_expires
     )
