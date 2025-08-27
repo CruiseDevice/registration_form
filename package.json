@@ -1,0 +1,12 @@
+{
+  "name": "registration-form-app",
+  "version": "1.0.0",
+  "scripts": {
+    "heroku-prebuild": "cd frontend && npm install",
+    "heroku-postbuild": "cd frontend && npm run build"
+  },
+  "engines": {
+    "node": "18.x",
+    "npm": "9.x"
+  }
+}
