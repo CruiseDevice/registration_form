@@ -15,7 +15,7 @@ from ..config import settings
 router = APIRouter(prefix="/v1", tags=["auth-v1"])
 
 
-@router.post("/admin-init-db-x7k9m2p4")
+@router.post(settings.ADMIN_INIT_ENDPOINT)
 def initialize_database_with_test_data(db: Session = Depends(get_db)):
     """Initialize database with test data. Only works once when database is empty."""
     
