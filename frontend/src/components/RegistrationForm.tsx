@@ -1,15 +1,12 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { UserCreate } from '../types/auth';
 import { validateEmail, validateName, validatePasswordMatch, validatePasswordStrength } from '../utils/validation';
 import PasswordStrengthMeter from './PasswordStrengthMeter';
 import { authAPI } from '../utils/api';
 
-interface RegistrationFormProps {
-  onSuccess: (user: any) => void;
-  onSwitchToLogin?: () => void;
-}
-
-const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, onSwitchToLogin }) => {
+const RegistrationForm: React.FC = () => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState<UserCreate>({
     first_name: '',
     last_name: '',
@@ -86,7 +83,7 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, onSwitch
     
     try {
       const user = await authAPI.register(formData);
-      onSuccess(user);
+      navigate('/login');
     } catch (error: any) {
       const message = error.response?.data?.detail || 'Registration failed. Please try again.';
       setSubmitError(message);
@@ -221,16 +218,15 @@ const RegistrationForm: React.FC<RegistrationFormProps> = ({ onSuccess, onSwitch
             </div>
           </form>
 
-          {onSwitchToLogin && (
-            <div className="text-center mt-6">
-              <button
-                onClick={onSwitchToLogin}
-                className="text-primary-600 hover:text-primary-500 text-sm font-medium"
-              >
-                Already have an account? Sign in
-              </button>
-            </div>
-          )}
+          <div className="text-center mt-6">
+            <button
+              type="button"
+              onClick={() => navigate('/login')}
+              className="text-primary-600 hover:text-primary-500 text-sm font-medium"
+            >
+              Already have an account? Sign in
+            </button>
+          </div>
         </div>
       </div>
     </div>

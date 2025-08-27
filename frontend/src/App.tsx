@@ -1,108 +1,39 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import RegistrationForm from './components/RegistrationForm';
 import LoginForm from './components/LoginForm';
 import WelcomePage from './pages/WelcomePage';
 import ProfilePage from './pages/ProfilePage';
+import ProtectedRoute from './components/ProtectedRoute';
 import './index.css';
 
-type AppState = 'login' | 'register' | 'welcome' | 'profile';
-
 function App() {
-  const [currentState, setCurrentState] = useState<AppState>('login');
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      setIsAuthenticated(true);
-      setCurrentState('welcome');
-    }
-  }, []);
-
-  const handleLoginSuccess = (token: string) => {
-    setIsAuthenticated(true);
-    setCurrentState('welcome');
-  };
-
-  const handleRegistrationSuccess = (user: any) => {
-    // After successful registration, redirect to login
-    setCurrentState('login');
-  };
-
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    setIsAuthenticated(false);
-    setCurrentState('login');
-  };
-
-  const handleSwitchToLogin = () => {
-    setCurrentState('login');
-  };
-
-  const handleSwitchToRegister = () => {
-    setCurrentState('register');
-  };
-
-  const handleGoToProfile = () => {
-    setCurrentState('profile');
-  };
-
-  const handleBackToWelcome = () => {
-    setCurrentState('welcome');
-  };
-
-  if (currentState === 'register') {
-    return (
-      <div className="App">
-        <RegistrationForm
-          onSuccess={handleRegistrationSuccess}
-          onSwitchToLogin={handleSwitchToLogin}
-        />
-      </div>
-    );
-  }
-
-  if (currentState === 'login') {
-    return (
-      <div className="App">
-        <LoginForm 
-          onSuccess={handleLoginSuccess}
-          onSwitchToRegister={handleSwitchToRegister}
-        />
-      </div>
-    );
-  }
-
-  if (currentState === 'welcome' && isAuthenticated) {
-    return (
-      <div className="App">
-        <WelcomePage 
-          onLogout={handleLogout}
-          onGoToProfile={handleGoToProfile}
-        />
-      </div>
-    );
-  }
-
-  if (currentState === 'profile' && isAuthenticated) {
-    return (
-      <div className="App">
-        <ProfilePage 
-          onLogout={handleLogout}
-          onBackToWelcome={handleBackToWelcome}
-        />
-      </div>
-    );
-  }
-
-  // Fallback to login if not authenticated
   return (
-    <div className="App">
-      <LoginForm 
-        onSuccess={handleLoginSuccess}
-        onSwitchToRegister={handleSwitchToRegister}
-      />
-    </div>
+    <Router>
+      <div className="App">
+        <Routes>
+          <Route path="/login" element={<LoginForm />} />
+          <Route path="/register" element={<RegistrationForm />} />
+          <Route 
+            path="/welcome" 
+            element={
+              <ProtectedRoute>
+                <WelcomePage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/profile" 
+            element={
+              <ProtectedRoute>
+                <ProfilePage />
+              </ProtectedRoute>
+            } 
+          />
+          <Route path="/" element={<Navigate to="/login" replace />} />
+        </Routes>
+      </div>
+    </Router>
   );
 }
 

@@ -1,14 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { User, UserUpdate } from '../types/auth';
 import { validateName } from '../utils/validation';
 import { authAPI } from '../utils/api';
 
-interface ProfilePageProps {
-  onLogout: () => void;
-  onBackToWelcome: () => void;
-}
-
-const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout, onBackToWelcome }) => {
+const ProfilePage: React.FC = () => {
+  const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState<UserUpdate>({
@@ -20,6 +17,11 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout, onBackToWelcome }) 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string>('');
   const [submitSuccess, setSubmitSuccess] = useState<string>('');
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    navigate('/login');
+  };
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -178,7 +180,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout, onBackToWelcome }) 
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center">
               <button
-                onClick={onBackToWelcome}
+                onClick={() => navigate('/welcome')}
                 className="mr-4 text-gray-600 hover:text-primary-600 transition-colors"
                 aria-label="Back to welcome page"
               >
@@ -188,7 +190,7 @@ const ProfilePage: React.FC<ProfilePageProps> = ({ onLogout, onBackToWelcome }) 
             </div>
             <nav className="flex space-x-4">
               <button
-                onClick={onLogout}
+                onClick={handleLogout}
                 className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-sm text-sm font-medium transition-colors"
                 aria-label="Sign out"
               >

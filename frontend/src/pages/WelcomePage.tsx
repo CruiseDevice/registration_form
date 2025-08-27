@@ -1,16 +1,18 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { User } from '../types/auth';
 import { authAPI } from '../utils/api';
 
-interface WelcomePageProps {
-  onLogout: () => void;
-  onGoToProfile: () => void;
-}
-
-const WelcomePage: React.FC<WelcomePageProps> = ({ onLogout, onGoToProfile }) => {
+const WelcomePage: React.FC = () => {
+  const navigate = useNavigate();
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>('');
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    navigate('/login');
+  };
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -50,7 +52,7 @@ const WelcomePage: React.FC<WelcomePageProps> = ({ onLogout, onGoToProfile }) =>
             <p className="text-sm text-red-800">{error}</p>
           </div>
           <button
-            onClick={onLogout}
+            onClick={handleLogout}
             className="mt-4 px-4 py-2 bg-primary-600 text-white rounded-sm hover:bg-primary-700 transition-colors"
           >
             Back to Login
@@ -70,14 +72,14 @@ const WelcomePage: React.FC<WelcomePageProps> = ({ onLogout, onGoToProfile }) =>
             </div>
             <nav className="flex space-x-4">
               <button
-                onClick={onGoToProfile}
+                onClick={() => navigate('/profile')}
                 className="text-gray-600 hover:text-primary-600 px-3 py-2 text-sm font-medium transition-colors"
                 aria-label="View profile"
               >
                 Profile
               </button>
               <button
-                onClick={onLogout}
+                onClick={handleLogout}
                 className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-3 py-2 rounded-sm text-sm font-medium transition-colors"
                 aria-label="Sign out"
               >
@@ -129,13 +131,13 @@ const WelcomePage: React.FC<WelcomePageProps> = ({ onLogout, onGoToProfile }) =>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button
-                onClick={onGoToProfile}
+                onClick={() => navigate('/profile')}
                 className="px-6 py-2 bg-primary-600 text-white rounded-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
               >
                 View Profile
               </button>
               <button
-                onClick={onLogout}
+                onClick={handleLogout}
                 className="px-6 py-2 border border-gray-300 text-gray-700 rounded-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
               >
                 Sign Out

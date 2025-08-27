@@ -39,4 +39,5 @@ node_modules/
 
 # Cursor AI editor
 .cursorignore
-.cursorindexingignore
+.cursorindexingignore.DS_Store
+backend/.DS_Store
